@@ -33,12 +33,34 @@
 (defn checkGame [line]
   (let [index (extractGameIndex line)
         games (map extractGames (extractGameInfos line))]
-    (if
-     (every?
-      (partial = true)
-      (map checkThrow games))
+    (if (every? (partial = true) (map checkThrow games))
       index
       0)))
 
 (print "part one:")
 (println (reduce + (map checkGame (string/split-lines input))))
+
+(defn calcMinCubes [line]
+  (let [games (map extractGames (extractGameInfos line))]
+    (reduce
+     (fn [cubeMap throws]
+       (loop [coll (seq throws) m cubeMap]
+         (if (empty? coll)
+           m
+           (let [entry (first coll)
+                 key (first entry)
+                 value (last entry)]
+             (if (> value (get m key java.lang.Integer/MIN_VALUE))
+               (recur (rest coll) (assoc m key value))
+               (recur (rest coll) m))))))
+
+     (clojure.lang.PersistentHashMap/EMPTY)
+     games)))
+
+(calcMinCubes "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red")
+
+(defn getThrowPower [thro]
+  (reduce #(* %1 (last %2)) 1 (seq thro)))
+
+(print "part one:")
+(println (reduce + (map #(getThrowPower (calcMinCubes %)) (string/split-lines input))))
